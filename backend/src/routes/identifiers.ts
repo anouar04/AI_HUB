@@ -1,11 +1,10 @@
-
 // Fix: Use qualified express types to avoid conflicts with global types.
-import express, { Request, Response } from 'express';
+import express from 'express';
 import Identifier from '../models/Identifier';
 
 const router = express.Router();
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: express.Request, res: express.Response) => {
     try {
         const identifiers = await Identifier.find();
         res.json(identifiers);
@@ -14,7 +13,7 @@ router.get('/', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: express.Request, res: express.Response) => {
     const identifier = new Identifier(req.body);
     try {
         const newIdentifier = await identifier.save();
@@ -24,7 +23,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 });
 
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', async (req: express.Request, res: express.Response) => {
     try {
         const updatedIdentifier = await Identifier.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedIdentifier) return res.status(404).json({ message: 'Identifier not found' });
@@ -34,7 +33,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     }
 });
 
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: express.Request, res: express.Response) => {
     try {
         const deletedIdentifier = await Identifier.findByIdAndDelete(req.params.id);
         if (!deletedIdentifier) return res.status(404).json({ message: 'Identifier not found' });

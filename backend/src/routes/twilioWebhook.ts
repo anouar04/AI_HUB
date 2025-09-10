@@ -1,5 +1,4 @@
-
-import express, { Request, Response } from 'express';
+import express from 'express';
 import Client from '../models/Client';
 import Conversation from '../models/Conversation';
 import { CommunicationChannel } from '../types';
@@ -8,7 +7,7 @@ import { processAndRespond } from '../services/conversationService';
 const router = express.Router();
 
 // POST handler for incoming Twilio messages
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: express.Request, res: express.Response) => {
   const from = req.body.From; // e.g., 'whatsapp:+14155238886'
   const body = req.body.Body; // The message text
   const profileName = req.body.ProfileName; // User's WhatsApp name

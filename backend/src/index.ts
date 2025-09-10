@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -32,17 +32,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.resolve('uploads')));
 
 // API Routes
-app.use('/api/clients', clientRoutes as Router);
-app.use('/api/appointments', appointmentRoutes as Router);
-app.use('/api/conversations', conversationRoutes as Router);
-app.use('/api/ai-config', aiConfigRoutes as Router);
-app.use('/api/channels', channelRoutes as Router);
-app.use('/api/identifiers', identifierRoutes as Router);
-app.use('/api/knowledge-files', knowledgeFileRoutes as Router);
+// Fix: Cast routers to express.Router to resolve type conflicts.
+app.use('/api/clients', clientRoutes as express.Router);
+app.use('/api/appointments', appointmentRoutes as express.Router);
+app.use('/api/conversations', conversationRoutes as express.Router);
+app.use('/api/ai-config', aiConfigRoutes as express.Router);
+app.use('/api/channels', channelRoutes as express.Router);
+app.use('/api/identifiers', identifierRoutes as express.Router);
+app.use('/api/knowledge-files', knowledgeFileRoutes as express.Router);
 
 // Webhook Routes
 // Fix: Explicitly cast router to express.Router to resolve type conflicts.
-app.use('/webhook-test/twilio-webhook', twilioWebhookRoutes as Router);
+app.use('/webhook-test/twilio-webhook', twilioWebhookRoutes as express.Router);
 
 
 app.listen(port, () => {

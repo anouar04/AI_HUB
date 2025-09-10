@@ -1,6 +1,5 @@
-
 // Fix: Use qualified express types to avoid conflicts with global types.
-import express, { Request, Response } from 'express';
+import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -27,7 +26,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // GET all knowledge files
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: express.Request, res: express.Response) => {
     try {
         const files = await KnowledgeFile.find().sort({ uploadedAt: -1 });
         res.json(files);
@@ -37,7 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // POST (upload) a new file
-router.post('/', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/', upload.single('file'), async (req: express.Request, res: express.Response) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
@@ -60,7 +59,7 @@ router.post('/', upload.single('file'), async (req: Request, res: Response) => {
 });
 
 // DELETE a file
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: express.Request, res: express.Response) => {
     try {
         const fileToDelete = await KnowledgeFile.findById(req.params.id);
         if (!fileToDelete) {

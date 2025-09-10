@@ -1,24 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../Header';
 import { useAppContext } from '../../context/AppContext';
 import { Icon } from '../icons/Icon';
 
 const AIAgentView: React.FC = () => {
-    const { aiConfig, setAiConfig, addNotification } = useAppContext();
-    const [knowledgeBase, setKnowledgeBase] = useState(aiConfig.knowledgeBase);
-    const [afterHoursResponse, setAfterHoursResponse] = useState(aiConfig.afterHoursResponse);
-    const [afterHoursEnabled, setAfterHoursEnabled] = useState(aiConfig.afterHoursEnabled);
+    const { aiConfig, setAiConfig } = useAppContext();
+    const [knowledgeBase, setKnowledgeBase] = useState('');
+    const [afterHoursResponse, setAfterHoursResponse] = useState('');
+    const [afterHoursEnabled, setAfterHoursEnabled] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     
-    const handleSave = () => {
+    useEffect(() => {
+        if (aiConfig) {
+            setKnowledgeBase(aiConfig.knowledgeBase);
+            setAfterHoursResponse(aiConfig.afterHoursResponse);
+            setAfterHoursEnabled(aiConfig.afterHoursEnabled);
+        }
+    }, [aiConfig]);
+
+    const handleSave = async () => {
         setIsSaving(true);
-        setAiConfig({ knowledgeBase, afterHoursResponse, afterHoursEnabled });
-        setTimeout(() => {
+        if(aiConfig) {
+            try {
+                // In a real app, this would be an API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                setAiConfig({ ...aiConfig, knowledgeBase, afterHoursResponse, afterHoursEnabled });
+                alert("AI settings saved!");
+            } catch (error) {
+                console.error("Failed to save AI config:", error);
+                alert("Failed to save settings.");
+            } finally {
+                setIsSaving(false);
+            }
+        } else {
+            alert("AI configuration not loaded yet.");
             setIsSaving(false);
-            // In a real app, you would show a more robust notification
-            alert("AI settings saved!");
-        }, 1000);
+        }
     };
+
+    if (!aiConfig) {
+        return (
+            <div className="p-8">
+                <Header title="Intelligent AI Agent" />
+                <div className="text-center py-20">
+                    <p>Loading AI configuration...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-8">

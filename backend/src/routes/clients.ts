@@ -1,12 +1,11 @@
-
 // Fix: Use qualified express types to avoid conflicts with global types.
-import express, { Request, Response } from 'express';
+import express from 'express';
 import Client from '../models/Client';
 
 const router = express.Router();
 
 // GET all clients
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: express.Request, res: express.Response) => {
   try {
     const clients = await Client.find().sort({ createdAt: -1 });
     res.json(clients);
@@ -16,7 +15,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // POST a new client
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: express.Request, res: express.Response) => {
   const client = new Client(req.body);
   try {
     const newClient = await client.save();
@@ -27,7 +26,7 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // PUT (update) a client
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', async (req: express.Request, res: express.Response) => {
   try {
     const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedClient) return res.status(404).json({ message: 'Client not found' });
