@@ -1,4 +1,6 @@
 
+
+
 import Conversation, { IConversation } from '../models/Conversation';
 import Client from '../models/Client';
 import Appointment from '../models/Appointment';
@@ -55,7 +57,16 @@ export const processAndRespond = async (conversation: IConversation, userMessage
                 await appointment.save();
 
                 const confirmationText = `OK, I've booked your appointment for "${title}" on ${date} at ${time}. Is there anything else?`;
-                conversation.messages.push({ sender: 'user', text: confirmationText, isAI: true, timestamp: new Date().toISOString() } as any);
+                conversation.messages.push({ 
+                    sender: 'user', 
+                    text: confirmationText, 
+                    isAI: true, 
+                    timestamp: new Date().toISOString(),
+                    toolCallResult: {
+                        toolName: 'bookAppointment',
+                        toolArgs: { title, date, time, durationMinutes }
+                    }
+                } as any);
             } else if (name === 'createOrUpdateClient') {
                 const { name: clientName, email: clientEmail } = args as { name: string; email?: string };
                 const client = await Client.findById(conversation.clientId);
@@ -64,20 +75,21 @@ export const processAndRespond = async (conversation: IConversation, userMessage
                     if (clientEmail) client.email = clientEmail;
                     await client.save();
                     const confirmationText = `Thanks, I've updated your name to ${clientName}. How can I help you today?`;
-                    conversation.messages.push({ sender: 'user', text: confirmationText, isAI: true, timestamp: new Date().toISOString() } as any);
+                    conversation.messages.push({ 
+                        sender: 'user', 
+                        text: confirmationText, 
+                        isAI: true, 
+                        timestamp: new Date().toISOString(),
+                        toolCallResult: {
+                            toolName: 'createOrUpdateClient',
+                            toolArgs: { name: clientName, email: clientEmail }
+                        }
+                    } as any);
                 }
             }
         } else if (aiResponsePart.text) {
             const aiText = aiResponsePart.text;
-            // Check for escalation first
-            if (aiText.trim() === "ESCALATE") {
-                const lastMessage = conversation.messages[conversation.messages.length - 1];
-                if (lastMessage) lastMessage.escalated = true;
-                // Add a message to inform the user
-                 conversation.messages.push({ sender: 'user', text: "I'm sorry, I can't help with that. I'll have a human team member get back to you shortly.", isAI: true, timestamp: new Date().toISOString() } as any);
-            } else {
-                conversation.messages.push({ sender: 'user', text: aiText, isAI: true, timestamp: new Date().toISOString() } as any);
-            }
+            conversation.messages.push({ sender: 'user', text: aiText, isAI: true, timestamp: new Date().toISOString() } as any);
         }
         
         return await conversation.save();

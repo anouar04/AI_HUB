@@ -6,6 +6,7 @@ import type { Channel, Conversation, Message } from '../../types';
 import { CommunicationChannel } from '../../types';
 import { format } from 'date-fns';
 import ChannelDetailsModal from '../channels/ChannelDetailsModal';
+import ToolCallResultCard from './ToolCallResultCard';
 
 const ChannelCard: React.FC<{ channel: Channel; onViewHistory: (channel: Channel) => void; onShowDetails: (channel: Channel) => void; }> = ({ channel, onViewHistory, onShowDetails }) => (
   <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-5 flex items-center justify-between w-full">
@@ -129,8 +130,10 @@ const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation
                                         {msg.sender === 'client' && <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0"></div>}
                                         <div className={`max-w-md p-3 rounded-lg ${msg.sender === 'user' ? 'bg-indigo-500 text-white' : 'bg-white shadow-sm'}`}>
                                             <p>{msg.text}</p>
+                                            {msg.isAI && msg.toolCallResult && (
+                                                <ToolCallResultCard toolCall={msg.toolCallResult} />
+                                            )}
                                             <p className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>{format(new Date(msg.timestamp), 'p')}{msg.isAI && <span className="font-bold ml-2">(AI)</span>}</p>
-                                            {msg.escalated && <div className="mt-2 p-2 bg-yellow-100 text-yellow-800 rounded-md text-sm font-medium">AI needs help with this query.</div>}
                                         </div>
                                     </div>
                                 ))}

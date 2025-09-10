@@ -1,3 +1,5 @@
+
+
 // Copied and adapted from frontend/types.ts to keep backend independent.
 
 export enum AppointmentStatus {
@@ -38,13 +40,18 @@ export interface Appointment {
   status: AppointmentStatus;
 }
 
+export interface ToolCallResult {
+    toolName: 'bookAppointment' | 'createOrUpdateClient';
+    toolArgs: any;
+}
+
 export interface Message {
     id: string;
     sender: 'user' | 'client';
     text: string;
     timestamp: string;
     isAI: boolean;
-    escalated?: boolean;
+    toolCallResult?: ToolCallResult;
 }
 
 export interface Conversation {

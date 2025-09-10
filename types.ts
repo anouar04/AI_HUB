@@ -34,13 +34,18 @@ export enum CommunicationChannel {
     SMS = 'SMS',
 }
 
+export interface ToolCallResult {
+    toolName: 'bookAppointment' | 'createOrUpdateClient';
+    toolArgs: any;
+}
+
 export interface Message {
     id: string;
     sender: 'user' | 'client';
     text: string;
     timestamp: string;
     isAI: boolean;
-    escalated?: boolean;
+    toolCallResult?: ToolCallResult;
 }
 
 export interface Conversation {
@@ -55,7 +60,6 @@ export enum NotificationType {
     NewMessage = 'New Message',
     NewAppointment = 'New Appointment',
     AppointmentChange = 'Appointment Change',
-    AIEscalation = 'AI Escalation',
     NewClient = 'New Client',
     NewIdentifier = 'New Identifier',
     FileUploaded = 'File Uploaded',

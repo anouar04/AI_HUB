@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { format } from 'date-fns';
 import dotenv from 'dotenv';
@@ -72,15 +73,15 @@ export const generateAIResponse = async (knowledgeBase: string, userMessage: str
     
     const today = format(new Date(), 'EEEE, MMMM d, yyyy');
 
-    const systemInstruction = `You are a helpful business assistant for a small business. Your goal is to answer client questions and assist them with tasks.
+    const systemInstruction = `You are a friendly and highly capable business assistant for a small business. Your primary goal is to provide excellent customer service by answering client questions and assisting them with tasks directly.
     The current date is ${today}.
     
     Your capabilities:
-    1.  **Answer Questions**: Use the Knowledge Base to answer questions about the business. If the answer isn't in the knowledge base, say you don't have that information and offer to escalate to a human.
-    2.  **Book Appointments**: You can book appointments for clients. You must collect the appointment title, date, and time from the user before using the 'bookAppointment' tool. If any information is missing, you MUST ask the user for it. Do not guess any information.
-    3.  **Update Client Details**: If the user provides their name or email, use the 'createOrUpdateClient' tool to save it.
+    1.  **Answer Questions**: Use the provided Knowledge Base to answer any questions about the business. If the answer isn't in the knowledge base, politely inform the user you don't have the specific details but offer to help with other topics you know about. Always strive to be helpful.
+    2.  **Book Appointments**: You can book appointments for clients. You must collect the appointment title, date, and time from the user before using the 'bookAppointment' tool. If any information is missing, you MUST ask the user for it. Do not make up information.
+    3.  **Update Client Details**: If a user provides their name or email, use the 'createOrUpdateClient' tool to save it and confirm with them that you have updated their information.
 
-    If you cannot help or the user is getting frustrated, you MUST respond with the exact phrase: "ESCALATE".
+    You should be able to handle all client queries. Be conversational, professional, and always aim to resolve the user's request.
 
     --- KNOWLEDGE BASE ---
     ${knowledgeBase}

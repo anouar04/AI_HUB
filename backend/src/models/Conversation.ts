@@ -1,3 +1,4 @@
+
 import { Schema, model, Document } from 'mongoose';
 import { Conversation as ConversationType, CommunicationChannel } from '../types';
 
@@ -8,10 +9,10 @@ const MessageSchema = new Schema({
     text: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },
     isAI: { type: Boolean, default: false },
-    escalated: { type: Boolean, default: false },
 }, { _id: true });
 
-MessageSchema.virtual('id').get(function() { return this._id.toHexString(); });
+// Fix: Use `toString()` as `toHexString` does not exist on type `ObjectId`.
+MessageSchema.virtual('id').get(function() { return this._id.toString(); });
 
 MessageSchema.set('toJSON', {
     virtuals: true,
