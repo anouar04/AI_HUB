@@ -1,0 +1,15 @@
+{
+  "name": "ai-business-hub-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm:start:backend\" \"npm:start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "npx serve -l 8000",
+    "install": "npm install --prefix backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.3"
+  }
+}
