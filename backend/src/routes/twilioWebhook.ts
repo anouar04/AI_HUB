@@ -1,3 +1,4 @@
+
 import express from 'express';
 import Client from '../models/Client';
 import Conversation from '../models/Conversation';
@@ -11,13 +12,15 @@ router.post('/', async (req: express.Request, res: express.Response) => {
   const from = req.body.From; // e.g., 'whatsapp:+14155238886'
   const body = req.body.Body; // The message text
   const profileName = req.body.ProfileName; // User's WhatsApp name
+  let replyText = ''; // This will hold the AI's response text
 
   console.log(`--- Twilio Webhook Received ---`);
   console.log(`From: ${from}, Name: ${profileName}, Message: ${body}`);
 
   if (!from || !body) {
       console.log('Missing From or Body, skipping.');
-      return res.status(400).send('Missing From or Body');
+      // Still send a response to Twilio to avoid errors on their end
+      return res.type('text/xml').send('<Response></Response>');
   }
 
   try {
@@ -49,15 +52,38 @@ router.post('/', async (req: express.Request, res: express.Response) => {
           console.log(`New conversation created for client: ${client.id}`);
       }
 
-      // 4. Process the message using the shared service
-      await processAndRespond(conversation, body);
+      // 4. Process the message and get the updated conversation
+      const updatedConversation = await processAndRespond(conversation, body);
       console.log(`Message processed for conversation: ${conversation.id}`);
+
+      // Extract the last message, which should be the AI's reply
+      const lastMessage = updatedConversation.messages[updatedConversation.messages.length - 1];
+      if (lastMessage && lastMessage.isAI) {
+        replyText = lastMessage.text;
+      }
+
 
   } catch (err: any) {
       console.error('Error processing Twilio webhook:', err.message);
+      // Set a generic error message to send back to the user
+      replyText = "I'm sorry, but I encountered a technical issue. Please try again later.";
   } finally {
-      // 5. ALWAYS respond to Twilio to acknowledge receipt
-      res.type('text/xml').send('<Response></Response>');
+      // 5. Respond to Twilio with the AI's message or an empty response to acknowledge receipt.
+      // A TwiML library is recommended for more complex responses.
+      let twimlResponse = '<Response>';
+      if (replyText) {
+          // Basic XML escaping for the message content to prevent TwiML errors
+          const escapedMessage = replyText
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&apos;');
+          twimlResponse += `<Message>${escapedMessage}</Message>`;
+      }
+      twimlResponse += '</Response>';
+      
+      res.type('text/xml').send(twimlResponse);
   }
 });
 

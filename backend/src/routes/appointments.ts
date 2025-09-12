@@ -1,4 +1,4 @@
-// Fix: Use qualified express types to avoid conflicts with global types.
+
 import express from 'express';
 import Appointment from '../models/Appointment';
 

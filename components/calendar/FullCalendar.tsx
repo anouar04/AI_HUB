@@ -2,19 +2,19 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Appointment, AppointmentStatus } from '../../types';
-import { 
-    format, 
-    startOfMonth, 
-    endOfMonth, 
-    eachDayOfInterval, 
-    startOfWeek, 
+// Fix: Import date-fns functions from the main package to resolve call signature errors.
+import {
+    format,
+    endOfMonth,
+    eachDayOfInterval,
     endOfWeek,
     isSameMonth,
     isToday,
     addMonths,
+    startOfMonth,
+    startOfWeek,
     subMonths,
-    isSameDay,
-    parseISO,
+    parseISO
 } from 'date-fns';
 import { Icon } from '../icons/Icon';
 

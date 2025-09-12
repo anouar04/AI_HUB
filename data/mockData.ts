@@ -1,7 +1,8 @@
 
 import type { Client, Appointment, Conversation, Notification, AIConfig, Channel, Identifier, KnowledgeFile } from '../types';
 import { AppointmentStatus, CommunicationChannel, NotificationType, ChannelType } from '../types';
-import { subDays, addHours, formatISO, subMinutes } from 'date-fns';
+// Fix: Import date-fns functions from the main package to resolve call signature errors.
+import { addHours, subDays, subMinutes } from 'date-fns';
 
 const now = new Date();
 

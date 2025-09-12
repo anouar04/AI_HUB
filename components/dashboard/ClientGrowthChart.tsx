@@ -1,5 +1,7 @@
+
 import React, { useMemo } from 'react';
 import type { Client } from '../../types';
+// Fix: Import date-fns functions from the main package to resolve call signature errors.
 import { format, subMonths, startOfMonth } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 

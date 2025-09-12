@@ -5,11 +5,20 @@
   "scripts": {
     "start": "concurrently \"npm:start:backend\" \"npm:start:frontend\"",
     "start:backend": "cd backend && npm start",
-    "start:frontend": "npx serve -l 8000",
-    "install": "npm install --prefix backend && npm install"
+    "start:frontend": "vite",
+    "dev": "npm install && cd backend && npm install"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "serve": "^14.2.3"
+    "serve": "^14.2.3",
+    "vite": "^5.3.1"
+  },
+  "dependencies": {
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "recharts": "^3.2.0"
   }
 }

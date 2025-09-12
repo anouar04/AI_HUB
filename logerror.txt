@@ -1,0 +1,42 @@
+PS C:\Users\ANOUAR\Documents\GitHub\AI_HUB> npm start
+
+> ai-business-hub-monorepo@1.0.0 start
+> concurrently "npm:start:backend" "npm:start:frontend"
+
+(node:8020) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[start:backend] 
+[start:backend] > ai-business-hub-monorepo@1.0.0 start:backend
+[start:backend] > cd backend && npm start
+[start:backend]
+[start:frontend]
+[start:frontend] > ai-business-hub-monorepo@1.0.0 start:frontend
+[start:frontend] > vite
+[start:frontend]
+[start:backend] 
+[start:backend] > ai-business-hub-backend@1.0.0 start
+[start:backend] > npx ts-node-dev --respawn --transpile-only src/index.ts
+[start:backend]
+[start:frontend] Failed to resolve dependency: react, present in 'optimizeDeps.include'
+[start:frontend] Failed to resolve dependency: react-dom, present in 'optimizeDeps.include'
+[start:frontend] Failed to resolve dependency: react/jsx-dev-runtime, present in 'optimizeDeps.include'
+[start:frontend] Failed to resolve dependency: react/jsx-runtime, present in 'optimizeDeps.include'
+[start:frontend] 
+[start:frontend]   VITE v5.4.20  ready in 364 ms
+[start:frontend]
+[start:frontend]   ➜  Local:   http://localhost:5173/
+[start:frontend]   ➜  Network: use --host to expose
+[start:frontend] Error: The following dependencies are imported but could not be resolved:
+[start:frontend]
+[start:frontend]   react (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/components/identifiers/IdentifierDetailsModal.tsx)
+[start:frontend]   react-dom/client (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/index.tsx)
+[start:frontend]   react/jsx-runtime (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/components/identifiers/IdentifierDetailsModal.tsx)
+[start:frontend]   recharts (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/components/dashboard/ClientGrowthChart.tsx)
+[start:frontend]
+[start:frontend] Are they installed?
+[start:frontend]     at file:///C:/Users/ANOUAR/Documents/GitHub/AI_HUB/node_modules/vite/dist/node/chunks/dep-D_zLpgQd.js:50669:15
+[start:frontend]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[start:frontend]     at async file:///C:/Users/ANOUAR/Documents/GitHub/AI_HUB/node_modules/vite/dist/node/chunks/dep-D_zLpgQd.js:50174:26
+[start:backend] [INFO] 01:19:05 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.2)
+[start:backend] Backend server running on http://localhost:5001
+[start:backend] MongoDB Connected...
