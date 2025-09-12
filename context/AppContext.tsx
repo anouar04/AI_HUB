@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import type { Client, Appointment, Conversation, Notification, AIConfig, Message, AppointmentData, Channel, Identifier, IdentifierData, KnowledgeFile, ChannelData } from '../types';
 import { NotificationType } from '../types';
@@ -208,8 +209,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         
         setConversations(prev => prev.map(c => c.id === updatedConversation.id ? updatedConversation : c));
         
-        const newAppointmentMessage = updatedConversation.messages.find((m: Message) => m.isAI && m.text.includes("I've booked your appointment"));
-        if (newAppointmentMessage) {
+        const lastAIMessage = updatedConversation.messages.slice().reverse().find((m: Message) => m.isAI);
+        const toolName = lastAIMessage?.toolCallResult?.toolName;
+        if (toolName === 'bookAppointment' || toolName === 'updateAppointmentStatus') {
             const appointmentsData = await apiCall('/appointments');
             setAppointments(appointmentsData);
         }

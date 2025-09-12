@@ -32,18 +32,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.resolve('uploads')));
 
 // API Routes
-// Fix: Cast routers to express.Router to resolve type conflicts.
-app.use('/api/clients', clientRoutes as express.Router);
-app.use('/api/appointments', appointmentRoutes as express.Router);
-app.use('/api/conversations', conversationRoutes as express.Router);
-app.use('/api/ai-config', aiConfigRoutes as express.Router);
-app.use('/api/channels', channelRoutes as express.Router);
-app.use('/api/identifiers', identifierRoutes as express.Router);
-app.use('/api/knowledge-files', knowledgeFileRoutes as express.Router);
+app.use('/api/clients', clientRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/ai-config', aiConfigRoutes);
+app.use('/api/channels', channelRoutes);
+app.use('/api/identifiers', identifierRoutes);
+app.use('/api/knowledge-files', knowledgeFileRoutes);
 
 // Webhook Routes
-// Fix: Explicitly cast router to express.Router to resolve type conflicts.
-app.use('/webhook-test/twilio-webhook', twilioWebhookRoutes as express.Router);
+app.use('/webhook-test/twilio-webhook', twilioWebhookRoutes);
 
 
 app.listen(port, () => {
