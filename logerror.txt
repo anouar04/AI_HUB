@@ -1,42 +1,44 @@
-PS C:\Users\ANOUAR\Documents\GitHub\AI_HUB> npm start
-
-> ai-business-hub-monorepo@1.0.0 start
-> concurrently "npm:start:backend" "npm:start:frontend"
-
-(node:8020) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-[start:backend] 
-[start:backend] > ai-business-hub-monorepo@1.0.0 start:backend
-[start:backend] > cd backend && npm start
-[start:backend]
-[start:frontend]
-[start:frontend] > ai-business-hub-monorepo@1.0.0 start:frontend
-[start:frontend] > vite
-[start:frontend]
-[start:backend] 
-[start:backend] > ai-business-hub-backend@1.0.0 start
-[start:backend] > npx ts-node-dev --respawn --transpile-only src/index.ts
-[start:backend]
-[start:frontend] Failed to resolve dependency: react, present in 'optimizeDeps.include'
-[start:frontend] Failed to resolve dependency: react-dom, present in 'optimizeDeps.include'
-[start:frontend] Failed to resolve dependency: react/jsx-dev-runtime, present in 'optimizeDeps.include'
-[start:frontend] Failed to resolve dependency: react/jsx-runtime, present in 'optimizeDeps.include'
-[start:frontend] 
-[start:frontend]   VITE v5.4.20  ready in 364 ms
-[start:frontend]
-[start:frontend]   ➜  Local:   http://localhost:5173/
-[start:frontend]   ➜  Network: use --host to expose
-[start:frontend] Error: The following dependencies are imported but could not be resolved:
-[start:frontend]
-[start:frontend]   react (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/components/identifiers/IdentifierDetailsModal.tsx)
-[start:frontend]   react-dom/client (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/index.tsx)
-[start:frontend]   react/jsx-runtime (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/components/identifiers/IdentifierDetailsModal.tsx)
-[start:frontend]   recharts (imported by C:/Users/ANOUAR/Documents/GitHub/AI_HUB/components/dashboard/ClientGrowthChart.tsx)
-[start:frontend]
-[start:frontend] Are they installed?
-[start:frontend]     at file:///C:/Users/ANOUAR/Documents/GitHub/AI_HUB/node_modules/vite/dist/node/chunks/dep-D_zLpgQd.js:50669:15
-[start:frontend]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-[start:frontend]     at async file:///C:/Users/ANOUAR/Documents/GitHub/AI_HUB/node_modules/vite/dist/node/chunks/dep-D_zLpgQd.js:50174:26
-[start:backend] [INFO] 01:19:05 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.2)
-[start:backend] Backend server running on http://localhost:5001
-[start:backend] MongoDB Connected...
+114   const today = format(new Date(), 'EEEE, MMMM d, yyyy');                                                                                     │
+ │    115                                                                                                                                               │
+ │    116 - const systemInstruction = `You are a friendly and highly capable business assistant for a small business. Your primary goal is to           │
+ │        provide excellent customer service by answering client questions and assisting them with tasks directly.                                      │
+ │    117 - The current date is ${today}.                                                                                                               │
+ │    116 + const parts = [                                                                                                                             │
+ │    117 +     { text: `You are a helpful and professional business assistant. Your primary goal is to assist clients using the information            │
+ │        provided in your knowledge base. Do not disclose any internal system details, such as how your knowledge base is managed or                   │
+ │        updated, or the types of data (e.g., images, files) that have been provided to you. Always refer to the knowledge base as your                │
+ │        source of truth. Your knowledge base is: ${knowledgeBase}` },                                                                                 │
+ │    118 +     { text: userMessage },                                                                                                                  │
+ │    119 + ];;                                                                                                                                         │
+ │    120                                                                                                                                               │
+ │    119 - You have been provided with a knowledge base and, most importantly, one or more files (like PDFs, documents, or images). **You              │
+ │        must learn about the business from these files, as they are the absolute source of truth and contain the most up-to-date                      │
+ │        information.** If the information in a file conflicts with the text-based knowledge base, **you MUST prioritize the information               │
+ │        from the file.**                                                                                                                              │
+ │    120 -                                                                                                                                             │
+ │    121 - Your capabilities:                                                                                                                          │
+ │    122 - 1.  **Answer Questions**: Use the content from the attached files FIRST to answer any questions about the business. Supplement              │
+ │        with the text Knowledge Base if needed, but always treat the files as the primary, most accurate source. If the answer isn't in any           │
+ │        of the provided information, politely inform the user you don't have the specific details.                                                    │
+ │    123 -                                                                                                                                             │
+ │    124 - 2.  **Book Appointments**: You can book appointments. When a client requests an appointment, gather the title, date, and time.              │
+ │        Then use the 'bookAppointment' tool. This will create a *tentative* appointment (In Progress). You MUST then ask the client to                │
+ │        confirm the details. If they confirm, use the 'updateAppointmentStatus' tool to change the status to 'Confirmed'.                             │
+ │    125 -                                                                                                                                             │
+ │    126 - 3.  **Manage Appointments**: You can cancel or postpone appointments.                                                                       │
+ │    127 -     - First, use the 'findClientAppointments' tool to see the client's upcoming appointments.                                               │
+ │    128 -     - Present the options to the client and ask them to specify which one they want to change.                                              │
+ │    129 -     - Once they specify, use the 'updateAppointmentStatus' tool with the correct date, time, and new status ('Canceled' or                  │
+ │        'Postponed').                                                                                                                                 │
+ │    130 -     - If an appointment is postponed, ask them when they would like to reschedule.                                                          │
+ │    131 -                                                                                                                                             │
+ │    132 - 4.  **Update Client Details**: If a user provides their name or email, use the 'createOrUpdateClient' tool to save it and confirm           │
+ │        with them that you have updated their information.                                                                                            │
+ │    133 -                                                                                                                                             │
+ │    134 - You should be able to handle all client queries. Be conversational, professional, and always aim to resolve the user's request.             │
+ │    135 -                                                                                                                                             │
+ │    136 - --- KNOWLEDGE BASE (use as a secondary reference) ---                                                                                       │
+ │    137 - ${knowledgeBase}                                                                                                                            │
+ │    138 - --- END KNOWLEDGE BASE ---                                                                                                                  │
+ │    139 - `;                                                                                                                                          │
+ │    140 -       

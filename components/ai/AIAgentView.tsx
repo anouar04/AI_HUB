@@ -4,7 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import { Icon } from '../icons/Icon';
 
 const AIAgentView: React.FC = () => {
-    const { aiConfig, setAiConfig } = useAppContext();
+    const { aiConfig, updateAiConfig } = useAppContext();
     const [knowledgeBase, setKnowledgeBase] = useState('');
     const [afterHoursResponse, setAfterHoursResponse] = useState('');
     const [afterHoursEnabled, setAfterHoursEnabled] = useState(false);
@@ -20,11 +20,11 @@ const AIAgentView: React.FC = () => {
 
     const handleSave = async () => {
         setIsSaving(true);
-        if(aiConfig) {
+        if (aiConfig && updateAiConfig) {
             try {
-                // In a real app, this would be an API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                setAiConfig({ ...aiConfig, knowledgeBase, afterHoursResponse, afterHoursEnabled });
+                const updatedConfig = { ...aiConfig, knowledgeBase, afterHoursResponse, afterHoursEnabled };
+                await updateAiConfig(updatedConfig);
+                console.log("Saved AI config:", updatedConfig);
                 alert("AI settings saved!");
             } catch (error) {
                 console.error("Failed to save AI config:", error);
@@ -33,7 +33,7 @@ const AIAgentView: React.FC = () => {
                 setIsSaving(false);
             }
         } else {
-            alert("AI configuration not loaded yet.");
+            alert("AI configuration not loaded yet or update function not available.");
             setIsSaving(false);
         }
     };

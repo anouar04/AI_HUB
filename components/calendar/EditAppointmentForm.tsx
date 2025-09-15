@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import type { Appointment } from '../../types';
 import { AppointmentStatus } from '../../types';
-// Fix: Import date-fns functions from the main package to resolve call signature errors.
-import { format, parseISO } from 'date-fns';
+// Fix: Corrected date-fns imports by using specific path for parseISO.
+import { format } from 'date-fns';
+import parseISO from 'date-fns/parseISO';
 
 interface EditAppointmentFormProps {
     appointment: Appointment | null;

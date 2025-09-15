@@ -1,12 +1,17 @@
 
 
+
+
 import Conversation, { IConversation } from '../models/Conversation';
 import Client from '../models/Client';
 import Appointment from '../models/Appointment';
 import AIConfig from '../models/AIConfig';
+import KnowledgeFile from '../models/KnowledgeFile';
+import fs from 'fs';
 import { generateAIResponse } from './geminiService';
-// Fix: Import date-fns functions from the main package to resolve call signature errors.
-import { addMinutes, format, parseISO } from 'date-fns';
+// Fix: Corrected date-fns imports by using specific path for parseISO.
+import { addMinutes, format } from 'date-fns';
+import parseISO from 'date-fns/parseISO';
 import { AppointmentStatus } from '../types';
 import { Document } from 'mongoose';
 
@@ -25,6 +30,22 @@ export const processAndRespond = async (conversation: IConversation & Document, 
         // 2. Prepare for and call AI
         const aiConfig = await AIConfig.findOne();
         if (!aiConfig) throw new Error('AI configuration not found.');
+        
+        const knowledgeFiles = await KnowledgeFile.find();
+        const fileParts = knowledgeFiles.map(file => {
+            try {
+                const data = fs.readFileSync(file.path, { encoding: 'base64' });
+                return {
+                    inlineData: {
+                        mimeType: file.type,
+                        data
+                    }
+                };
+            } catch (error) {
+                console.error(`Error reading knowledge file ${file.name}:`, error);
+                return null;
+            }
+        }).filter(part => part !== null);
 
         const history = conversation.messages.map(msg => ({
             role: msg.sender === 'client' ? 'user' : 'model',
@@ -32,7 +53,12 @@ export const processAndRespond = async (conversation: IConversation & Document, 
         }));
 
         // Exclude the last message (the one we're processing) from history for the call
-        const aiResponse = await generateAIResponse(aiConfig.knowledgeBase, userMessageText, history.slice(0, -1));
+        const aiResponse = await generateAIResponse(
+            aiConfig.knowledgeBase, 
+            userMessageText, 
+            history.slice(0, -1),
+            fileParts as any[]
+        );
         const aiResponsePart = aiResponse.candidates?.[0]?.content.parts[0];
         
         if (!aiResponsePart) {

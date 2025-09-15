@@ -1,8 +1,10 @@
 
 import React, { useMemo } from 'react';
 import type { Client } from '../../types';
-// Fix: Import date-fns functions from the main package to resolve call signature errors.
-import { format, subMonths, startOfMonth } from 'date-fns';
+// Fix: Corrected date-fns imports by using specific paths for subMonths and startOfMonth.
+import { format } from 'date-fns';
+import subMonths from 'date-fns/subMonths';
+import startOfMonth from 'date-fns/startOfMonth';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface ClientGrowthChartProps {

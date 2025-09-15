@@ -1,11 +1,10 @@
-
-import express from 'express';
+import { Request, Response, Router } from 'express';
 import Client from '../models/Client';
 
-const router = express.Router();
+const router = Router();
 
 // GET all clients
-router.get('/', async (req: express.Request, res: express.Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const clients = await Client.find().sort({ createdAt: -1 });
     res.json(clients);
@@ -15,7 +14,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 });
 
 // POST a new client
-router.post('/', async (req: express.Request, res: express.Response) => {
+router.post('/', async (req: Request, res: Response) => {
   const client = new Client(req.body);
   try {
     const newClient = await client.save();
@@ -26,7 +25,7 @@ router.post('/', async (req: express.Request, res: express.Response) => {
 });
 
 // PUT (update) a client
-router.put('/:id', async (req: express.Request, res: express.Response) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updatedClient) return res.status(404).json({ message: 'Client not found' });

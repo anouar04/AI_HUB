@@ -24,11 +24,11 @@ const ChannelCard: React.FC<{
     onDelete: (channelId: string) => void;
 }> = ({ channel, onShowDetails, onDelete }) => {
     // In a real app, this would likely call a context function to update the channel
-    const { setChannels } = useAppContext();
+    const { updateChannel } = useAppContext();
 
-    const handleToggle = () => {
+    const handleToggle = async () => {
         const newEnabledState = !channel.enabled;
-        setChannels(prev => prev.map(c => c.id === channel.id ? {...c, enabled: newEnabledState, status: newEnabledState ? 'Active' : 'Inactive' } : c));
+        await updateChannel({ ...channel, enabled: newEnabledState, status: newEnabledState ? 'Active' : 'Inactive' });
     };
 
     return (

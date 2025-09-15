@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Appointment, AppointmentStatus } from '../../types';
-// Fix: Import date-fns functions from the main package to resolve call signature errors.
+// Fix: Corrected date-fns imports by using specific paths for functions.
 import {
     format,
     endOfMonth,
@@ -11,11 +11,11 @@ import {
     isSameMonth,
     isToday,
     addMonths,
-    startOfMonth,
-    startOfWeek,
-    subMonths,
-    parseISO
 } from 'date-fns';
+import startOfMonth from 'date-fns/startOfMonth';
+import startOfWeek from 'date-fns/startOfWeek';
+import subMonths from 'date-fns/subMonths';
+import parseISO from 'date-fns/parseISO';
 import { Icon } from '../icons/Icon';
 
 interface FullCalendarProps {

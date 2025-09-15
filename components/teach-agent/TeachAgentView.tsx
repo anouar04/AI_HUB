@@ -81,7 +81,7 @@ const TeachAgentView: React.FC = () => {
             <div className="bg-white p-8 rounded-lg shadow-sm">
                 <h2 className="text-2xl font-semibold mb-2">Agent</h2>
                 <p className="text-slate-500 mb-6">
-                    Teach your agent by uploading PDF file containing your offers, Business Information, FAQs, Opening Hours...
+                    Teach your agent by uploading files containing your offers, Business Information, FAQs, Opening Hours...
                 </p>
 
                 {/* Drag and Drop Area */}
@@ -104,7 +104,7 @@ const TeachAgentView: React.FC = () => {
                                 <Icon className="w-10 h-10 text-slate-500"><path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" /></Icon>
                             </div>
                             <p className="mt-4 text-lg font-semibold text-slate-700">Drag & Drop File Here</p>
-                            <p className="text-sm text-slate-500 mt-1">Drag and drop your PNG, JPG, WebP, SVG images here or browse</p>
+                            <p className="text-sm text-slate-500 mt-1">Supports PDF, DOCX, TXT, images, and more.</p>
                             <button onClick={handleBrowseClick} className="mt-4 text-indigo-600 font-semibold hover:underline">
                                 Browse File
                             </button>
@@ -113,7 +113,7 @@ const TeachAgentView: React.FC = () => {
                                 type="file"
                                 onChange={handleFileSelect}
                                 className="hidden"
-                                accept="application/pdf,image/png,image/jpeg,image/webp,image/svg+xml"
+                                accept="application/pdf,image/*,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 disabled={isUploading}
                             />
                         </div>

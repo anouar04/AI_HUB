@@ -1,11 +1,10 @@
-
-import express from 'express';
+import { Request, Response, Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import KnowledgeFile from '../models/KnowledgeFile';
 
-const router = express.Router();
+const router = Router();
 
 // Ensure uploads directory exists
 // Fix: Resolve path from current working directory to avoid issues with __dirname not being defined in some environments.
@@ -26,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // GET all knowledge files
-router.get('/', async (req: express.Request, res: express.Response) => {
+router.get('/', async (req: Request, res: Response) => {
     try {
         const files = await KnowledgeFile.find().sort({ uploadedAt: -1 });
         res.json(files);
@@ -36,7 +35,7 @@ router.get('/', async (req: express.Request, res: express.Response) => {
 });
 
 // POST (upload) a new file
-router.post('/', upload.single('file'), async (req: express.Request, res: express.Response) => {
+router.post('/', upload.single('file'), async (req: Request, res: Response) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
@@ -59,7 +58,7 @@ router.post('/', upload.single('file'), async (req: express.Request, res: expres
 });
 
 // DELETE a file
-router.delete('/:id', async (req: express.Request, res: express.Response) => {
+router.delete('/:id', async (req: Request, res: Response) => {
     try {
         const fileToDelete = await KnowledgeFile.findById(req.params.id);
         if (!fileToDelete) {

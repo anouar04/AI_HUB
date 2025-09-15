@@ -1,6 +1,4 @@
 
-
-
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { format } from 'date-fns';
 import dotenv from 'dotenv';
@@ -8,11 +6,11 @@ import { AppointmentStatus } from "../types";
 
 dotenv.config();
 
-if (!process.env.GEMINI_API_KEY) {
+if (!process.env.API_KEY) {
     console.error("FATAL ERROR: API_KEY environment variable not set for Gemini.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
 
 const bookAppointmentTool = {
     functionDeclarations: [
@@ -109,8 +107,8 @@ const updateAppointmentStatusTool = {
     ]
 };
 
-export const generateAIResponse = async (knowledgeBase: string, userMessage: string, conversationHistory: {role: string, parts: {text: string}[]}[]): Promise<GenerateContentResponse> => {
-    if (!process.env.GEMINI_API_KEY) {
+export const generateAIResponse = async (knowledgeBase: string, userMessage: string, conversationHistory: {role: string, parts: {text: string}[]}[], fileParts: any[]): Promise<GenerateContentResponse> => {
+    if (!process.env.API_KEY) {
         throw new Error("Gemini API key is not configured on the server.");
     }
     
@@ -119,8 +117,10 @@ export const generateAIResponse = async (knowledgeBase: string, userMessage: str
     const systemInstruction = `You are a friendly and highly capable business assistant for a small business. Your primary goal is to provide excellent customer service by answering client questions and assisting them with tasks directly.
     The current date is ${today}.
     
+    You have been provided with a knowledge base and, most importantly, one or more files (like PDFs, documents, or images). **You must learn about the business from these files, as they are the absolute source of truth and contain the most up-to-date information.** If the information in a file conflicts with the text-based knowledge base, **you MUST prioritize the information from the file.**
+
     Your capabilities:
-    1.  **Answer Questions**: Use the provided Knowledge Base to answer any questions about the business. If the answer isn't in the knowledge base, politely inform the user you don't have the specific details but offer to help with other topics you know about. Always strive to be helpful.
+    1.  **Answer Questions**: Use the content from the attached files FIRST to answer any questions about the business. Supplement with the text Knowledge Base if needed, but always treat the files as the primary, most accurate source. If the answer isn't in any of the provided information, politely inform the user you don't have the specific details.
     
     2.  **Book Appointments**: You can book appointments. When a client requests an appointment, gather the title, date, and time. Then use the 'bookAppointment' tool. This will create a *tentative* appointment (In Progress). You MUST then ask the client to confirm the details. If they confirm, use the 'updateAppointmentStatus' tool to change the status to 'Confirmed'.
     
@@ -134,15 +134,23 @@ export const generateAIResponse = async (knowledgeBase: string, userMessage: str
 
     You should be able to handle all client queries. Be conversational, professional, and always aim to resolve the user's request.
 
-    --- KNOWLEDGE BASE ---
+    --- KNOWLEDGE BASE (use as a secondary reference) ---
     ${knowledgeBase}
     --- END KNOWLEDGE BASE ---
     `;
 
+    const userContentParts: any[] = [];
+    if (fileParts && fileParts.length > 0) {
+        // Prepend files to the user's message parts, so the model sees them as context first.
+        userContentParts.push(...fileParts);
+    }
+    userContentParts.push({ text: userMessage });
+
+
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: [...conversationHistory, { role: 'user', parts: [{text: userMessage}] }],
+            contents: [...conversationHistory, { role: 'user', parts: userContentParts }],
             config: {
                 systemInstruction: systemInstruction,
                 temperature: 0.7,

@@ -35,7 +35,7 @@ export enum CommunicationChannel {
 }
 
 export interface ToolCallResult {
-    toolName: 'bookAppointment' | 'createOrUpdateClient';
+    toolName: 'bookAppointment' | 'createOrUpdateClient' | 'findClientAppointments' | 'updateAppointmentStatus';
     toolArgs: any;
 }
 

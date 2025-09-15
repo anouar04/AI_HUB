@@ -1,4 +1,5 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+
+import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
 import type { Client, Appointment, Conversation, Notification, AIConfig, Message, AppointmentData, Channel, Identifier, IdentifierData, KnowledgeFile, ChannelData } from '../types';
 import { NotificationType } from '../types';
 
@@ -55,6 +56,7 @@ interface AppContextType {
     deleteChannel: (channelId: string) => Promise<void>;
     addKnowledgeFile: (file: File) => Promise<void>;
     deleteKnowledgeFile: (fileId: string) => Promise<void>;
+    updateAiConfig: (configData: AIConfig) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -68,16 +70,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [channels, setChannels] = useState<Channel[]>([]);
     const [identifiers, setIdentifiers] = useState<Identifier[]>([]);
     const [knowledgeFiles, setKnowledgeFiles] = useState<KnowledgeFile[]>([]);
+    const prevConversationsRef = useRef<Conversation[]>();
 
-    // Initial data fetching
     useEffect(() => {
-        const fetchAllData = async () => {
+        const fetchStaticData = async () => {
             try {
-                const [clientsData, appointmentsData, conversationsData, aiConfigData, channelsData, identifiersData, knowledgeFilesData] = await Promise.all([
+                const aiConfigData = await apiCall('/ai-config');
+                setAiConfig(aiConfigData);
+            } catch (error) {
+                console.error("Failed to fetch AI config:", error);
+            }
+        };
+    
+        const fetchDynamicData = async () => {
+            try {
+                const [clientsData, appointmentsData, conversationsData, channelsData, identifiersData, knowledgeFilesData] = await Promise.all([
                     apiCall('/clients'),
                     apiCall('/appointments'),
                     apiCall('/conversations'),
-                    apiCall('/ai-config'),
                     apiCall('/channels'),
                     apiCall('/identifiers'),
                     apiCall('/knowledge-files'),
@@ -85,17 +95,52 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 setClients(clientsData || []);
                 setAppointments(appointmentsData || []);
                 setConversations(conversationsData || []);
-                setAiConfig(aiConfigData);
                 setChannels(channelsData || []);
                 setIdentifiers(identifiersData || []);
                 setKnowledgeFiles(knowledgeFilesData || []);
             } catch (error) {
-                console.error("Failed to fetch initial data:", error);
-                // You might want to show a global error message to the user here
+                console.error("Failed to fetch dynamic data:", error);
             }
         };
-        fetchAllData();
+    
+        fetchStaticData();
+        fetchDynamicData(); // Initial fetch
+        const interval = setInterval(fetchDynamicData, 5000); // Poll every 5 seconds
+    
+        return () => clearInterval(interval); // Cleanup on unmount
     }, []);
+
+    useEffect(() => {
+        if (prevConversationsRef.current) {
+            conversations.forEach(newConvo => {
+                const oldConvo = prevConversationsRef.current.find(c => c.id === newConvo.id);
+                if (oldConvo && newConvo.messages.length > oldConvo.messages.length) {
+                    const newMessages = newConvo.messages.slice(oldConvo.messages.length);
+                    newMessages.forEach(msg => {
+                        if (msg.sender === 'client') {
+                            const client = clients.find(c => c.id === newConvo.clientId);
+                            addNotification(NotificationType.NewMessage, `New message from ${client?.name || 'a client'}`);
+                        }
+                        if (msg.isAI) {
+                            const toolName = msg.toolCallResult?.toolName;
+                            if (toolName === 'bookAppointment' || toolName === 'updateAppointmentStatus') {
+                                apiCall('/appointments').then(setAppointments);
+                                const client = clients.find(c => c.id === newConvo.clientId);
+                                if (toolName === 'bookAppointment') {
+                                    const { title } = msg.toolCallResult.toolArgs as { title: string };
+                                    addNotification(NotificationType.NewAppointment, `AI booked a new appointment "${title}" for ${client?.name || 'a client'}.`);
+                                } else if (toolName === 'updateAppointmentStatus') {
+                                    const { newStatus } = msg.toolCallResult.toolArgs as { newStatus: string };
+                                    addNotification(NotificationType.AppointmentChange, `AI updated an appointment to "${newStatus}" for ${client?.name || 'a client'}.`);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        prevConversationsRef.current = conversations;
+    }, [conversations]);
 
 
     const addNotification = (type: NotificationType, message: string) => {
@@ -196,6 +241,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setKnowledgeFiles(prev => prev.filter(file => file.id !== fileId));
     };
 
+    const updateAiConfig = async (configData: AIConfig) => {
+        const updatedConfig = await apiCall('/ai-config', { method: 'PUT', body: JSON.stringify(configData) });
+        console.log("Received updated AI config from server:", updatedConfig);
+        setAiConfig(updatedConfig);
+    };
+
     const handleIncomingMessage = async (conversationId: string, text: string) => {
         const tempMessageId = Date.now().toString();
         const clientMessage: Message = { id: tempMessageId, sender: 'client', text, timestamp: new Date().toISOString(), isAI: false };
@@ -213,6 +264,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (toolName === 'bookAppointment' || toolName === 'updateAppointmentStatus') {
             const appointmentsData = await apiCall('/appointments');
             setAppointments(appointmentsData);
+
+            const toolArgs = lastAIMessage?.toolCallResult?.toolArgs;
+            if (toolArgs) {
+                const client = clients.find(c => c.id === updatedConversation.clientId);
+                if (toolName === 'bookAppointment') {
+                    const { title } = toolArgs as { title: string };
+                    addNotification(NotificationType.NewAppointment, `AI booked a new appointment \"${title}\" for ${client?.name || 'a client'}.`);
+                } else if (toolName === 'updateAppointmentStatus') {
+                    const { newStatus } = toolArgs as { newStatus: string };
+                    addNotification(NotificationType.AppointmentChange, `AI updated an appointment to \"${newStatus}\" for ${client?.name || 'a client'}.`);
+                }
+            }
         }
     };
 
@@ -239,6 +302,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteChannel,
         addKnowledgeFile,
         deleteKnowledgeFile,
+        updateAiConfig,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

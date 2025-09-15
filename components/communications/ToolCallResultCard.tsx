@@ -2,8 +2,9 @@
 import React from 'react';
 import type { ToolCallResult } from '../../types';
 import { Icon } from '../icons/Icon';
-// Fix: Import date-fns functions from the main package to resolve call signature errors.
-import { format, parseISO } from 'date-fns';
+// Fix: Corrected date-fns imports by using specific path for parseISO.
+import { format } from 'date-fns';
+import parseISO from 'date-fns/parseISO';
 
 interface ToolCallResultCardProps {
     toolCall: ToolCallResult;
