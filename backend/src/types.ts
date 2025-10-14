@@ -95,3 +95,18 @@ export interface KnowledgeFile {
   uploadedAt: string;
   path: string; // Add path for server storage
 }
+
+export enum NotificationType {
+  NewMessage = 'NewMessage',
+  NewAppointment = 'NewAppointment',
+  AppointmentChange = 'AppointmentChange',
+  ClientChange = 'ClientChange',
+  IdentifierChange = 'IdentifierChange',
+  IdentifierDeleted = 'IdentifierDeleted',
+  ChannelChange = 'ChannelChange',
+  ChannelDeleted = 'ChannelDeleted',
+  NewClient = 'NewClient',
+  NewIdentifier = 'NewIdentifier',
+  FileUploaded = 'FileUploaded',
+  NewChannel = 'NewChannel',
+}

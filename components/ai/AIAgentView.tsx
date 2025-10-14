@@ -86,6 +86,7 @@ const AIAgentView: React.FC = () => {
                 </div>
 
                 {/* Automated Responder */}
+                {/*
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                     <div className="flex justify-between items-center mb-4">
                         <div>
@@ -109,6 +110,7 @@ const AIAgentView: React.FC = () => {
                         disabled={!afterHoursEnabled}
                     />
                 </div>
+                */}
                 
                 <div className="flex justify-end">
                     <button 

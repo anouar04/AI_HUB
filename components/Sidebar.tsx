@@ -2,6 +2,7 @@
 import React from 'react';
 import { Icon } from './icons/Icon';
 import type { View } from '../types';
+import { useAppContext } from '../context/AppContext';
 
 interface SidebarProps {
   currentView: View;
@@ -9,6 +10,8 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView }) => {
+  const { notifications } = useAppContext();
+  const unreadNotificationCount = notifications.filter(n => !n.read).length;
   const navItems: { id: View; name: string; icon: JSX.Element }[] = [
     { id: 'dashboard', name: 'Dashboard', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /> },
     { id: 'calendar', name: 'Calendar', icon: <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0h18M12 12.75h.008v.008H12v-.008z" /> },
@@ -23,7 +26,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView }) => {
 
   const NavItem: React.FC<{
     item: { id: View; name: string; icon: JSX.Element };
-  }> = ({ item }) => {
+    unreadCount?: number;
+  }> = ({ item, unreadCount }) => {
     const isActive = currentView === item.id;
     return (
       <li>
@@ -37,6 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView }) => {
         >
           <Icon className="w-6 h-6 mr-3">{item.icon}</Icon>
           <span className="font-medium">{item.name}</span>
+          {item.id === 'notifications' && unreadCount && unreadCount > 0 && (
+            <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{unreadCount}</span>
+          )}
         </button>
       </li>
     );
@@ -53,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView }) => {
       <nav>
         <ul>
           {navItems.map((item) => (
-            <NavItem key={item.id} item={item} />
+            <NavItem key={item.id} item={item} unreadCount={unreadNotificationCount} />
           ))}
         </ul>
       </nav>

@@ -50,12 +50,19 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ onAddAppointment, onEditApp
     }
     
     const appointmentsByDate = useMemo(() => {
-        return appointments.reduce((acc, appt) => {
+        const grouped = appointments.reduce((acc, appt) => {
             const dateKey = format(parseISO(appt.start), 'yyyy-MM-dd');
             if(!acc[dateKey]) acc[dateKey] = [];
             acc[dateKey].push(appt);
             return acc;
         }, {} as Record<string, Appointment[]>);
+
+        // Sort appointments within each day
+        for (const dateKey in grouped) {
+            grouped[dateKey].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+        }
+
+        return grouped;
     }, [appointments]);
 
     const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -120,6 +127,7 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ onAddAppointment, onEditApp
                                         >
                                             <p className="font-semibold truncate">{appt.title}</p>
                                             <p className="opacity-80">{client?.name}</p>
+                                            <p className="opacity-80 font-bold">{format(parseISO(appt.start), 'HH:mm')}</p>
                                         </button>
                                     )
                                 })}

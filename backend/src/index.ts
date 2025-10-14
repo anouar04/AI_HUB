@@ -11,6 +11,7 @@ import channelRoutes from './routes/channels';
 import identifierRoutes from './routes/identifiers';
 import knowledgeFileRoutes from './routes/knowledgeFiles';
 import twilioWebhookRoutes from './routes/twilioWebhook';
+import notificationsRoutes from './routes/notifications';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use('/api/ai-config', aiConfigRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/identifiers', identifierRoutes);
 app.use('/api/knowledge-files', knowledgeFileRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Webhook Routes
 app.use('/webhook-test/twilio-webhook', twilioWebhookRoutes);

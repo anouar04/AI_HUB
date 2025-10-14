@@ -5,7 +5,7 @@ import { Conversation as ConversationType, CommunicationChannel } from '../types
 export interface IConversation extends Omit<ConversationType, 'id'>, Document {}
 
 const MessageSchema = new Schema({
-    sender: { type: String, enum: ['user', 'client'], required: true },
+    sender: { type: String, enum: ['user', 'client', 'model', 'ai'], required: true },
     text: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },
     isAI: { type: Boolean, default: false },

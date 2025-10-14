@@ -39,16 +39,31 @@ const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(conversations.length > 0 ? conversations[0].id : null);
     const [replyText, setReplyText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const [isAtBottom, setIsAtBottom] = useState(true);
 
     const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [selectedConversation?.messages]);
+        if (isAtBottom) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [selectedConversation?.messages, isAtBottom]);
+
+    const handleScroll = () => {
+        if (messagesContainerRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+            // Check if scrolled to bottom (within a small tolerance)
+            setIsAtBottom(scrollHeight - scrollTop <= clientHeight + 1);
+        }
+    };
+
+
 
     const handleSelectConversation = (id: string) => {
         setSelectedConversationId(id);
         setConversations(convos => convos.map(c => c.id === id ? {...c, unread: false} : c));
+        setIsAtBottom(true); // Reset to true when a new conversation is selected
     };
 
     const handleSendReply = async () => {
@@ -123,29 +138,24 @@ const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation
                     {selectedConversation ? (
                         <>
                         <div className="p-4 border-b border-slate-200"><h2 className="font-bold text-lg">{clients.find(c=>c.id === selectedConversation.clientId)?.name}</h2></div>
-                        <div className="flex-1 p-6 overflow-y-auto bg-slate-50">
+                        <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 p-6 overflow-y-auto bg-slate-50">
                             <div className="space-y-4">
                                 {selectedConversation.messages.map(msg => (
                                     <div key={msg.id} className={`flex items-end gap-2 ${msg.sender === 'user' ? 'justify-end' : ''}`}>
                                         {msg.sender === 'client' && <div className="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0"></div>}
-                                        <div className={`max-w-md p-3 rounded-lg ${msg.sender === 'user' ? 'bg-indigo-500 text-white' : 'bg-white shadow-sm'}`}>
+                                        <div className={`max-w-md p-3 rounded-lg ${msg.isAI ? 'bg-purple-500 text-white' : (msg.sender === 'client' ? 'bg-white shadow-sm' : '')}`}>
                                             <p>{msg.text}</p>
                                             {msg.isAI && msg.toolCallResult && (
                                                 <ToolCallResultCard toolCall={msg.toolCallResult} />
                                             )}
-                                            <p className={`text-xs mt-1 ${msg.sender === 'user' ? 'text-indigo-200' : 'text-slate-400'}`}>{format(new Date(msg.timestamp), 'p')}{msg.isAI && <span className="font-bold ml-2">(AI)</span>}</p>
+                                            <p className={`text-xs mt-1 ${msg.isAI ? 'text-purple-200' : 'text-slate-400'}`}>{format(new Date(msg.timestamp), 'p')}{msg.isAI && <span className="font-bold ml-2">(AI)</span>}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                             <div ref={messagesEndRef} />
                         </div>
-                        <div className="p-4 border-t border-slate-200 bg-white">
-                            <div className="flex items-center">
-                                <input type="text" value={replyText} onChange={e => setReplyText(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSendReply()} placeholder="Type your reply..." className="flex-1 p-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500" />
-                                <button onClick={handleSendReply} className="ml-2 p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"><Icon className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></Icon></button>
-                            </div>
-                        </div>
+
                         </>
                     ) : (
                         <div className="flex-1 flex justify-center items-center text-slate-500"><p>Select a conversation to view messages.</p></div>

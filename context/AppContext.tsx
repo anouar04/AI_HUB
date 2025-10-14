@@ -26,6 +26,7 @@ const apiCall = async (url: string, options: RequestInit = {}) => {
 
 
 interface AppContextType {
+    apiCall: (url: string, options?: RequestInit) => Promise<any>;
     clients: Client[];
     setClients: React.Dispatch<React.SetStateAction<Client[]>>;
     appointments: Appointment[];
@@ -42,7 +43,7 @@ interface AppContextType {
     setIdentifiers: React.Dispatch<React.SetStateAction<Identifier[]>>;
     knowledgeFiles: KnowledgeFile[];
     setKnowledgeFiles: React.Dispatch<React.SetStateAction<KnowledgeFile[]>>;
-    addNotification: (type: NotificationType, message: string) => void;
+    addNotification: (type: NotificationType, message: string, link?: string) => void;
     handleIncomingMessage: (conversationId: string, text: string) => Promise<void>;
     addClient: (clientData: Omit<Client, 'id' | 'createdAt'>) => Promise<void>;
     updateClient: (clientData: Client) => Promise<void>;
@@ -84,13 +85,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
         const fetchDynamicData = async () => {
             try {
-                const [clientsData, appointmentsData, conversationsData, channelsData, identifiersData, knowledgeFilesData] = await Promise.all([
+                const [clientsData, appointmentsData, conversationsData, channelsData, identifiersData, knowledgeFilesData, notificationsData] = await Promise.all([
                     apiCall('/clients'),
                     apiCall('/appointments'),
                     apiCall('/conversations'),
                     apiCall('/channels'),
                     apiCall('/identifiers'),
                     apiCall('/knowledge-files'),
+                    apiCall('/notifications?recipientId=admin'), // Fetch notifications for admin
                 ]);
                 setClients(clientsData || []);
                 setAppointments(appointmentsData || []);
@@ -98,6 +100,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 setChannels(channelsData || []);
                 setIdentifiers(identifiersData || []);
                 setKnowledgeFiles(knowledgeFilesData || []);
+                setNotifications(notificationsData || []);
             } catch (error) {
                 console.error("Failed to fetch dynamic data:", error);
             }
@@ -119,7 +122,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                     newMessages.forEach(msg => {
                         if (msg.sender === 'client') {
                             const client = clients.find(c => c.id === newConvo.clientId);
-                            addNotification(NotificationType.NewMessage, `New message from ${client?.name || 'a client'}`);
+                            addNotification(NotificationType.NewMessage, `New message from ${client?.name || 'a client'}`, `/communications/${newConvo.id}`);
                         }
                         if (msg.isAI) {
                             const toolName = msg.toolCallResult?.toolName;
@@ -128,10 +131,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                                 const client = clients.find(c => c.id === newConvo.clientId);
                                 if (toolName === 'bookAppointment') {
                                     const { title } = msg.toolCallResult.toolArgs as { title: string };
-                                    addNotification(NotificationType.NewAppointment, `AI booked a new appointment "${title}" for ${client?.name || 'a client'}.`);
+                                    addNotification(NotificationType.NewAppointment, `AI booked a new appointment "${title}" for ${client?.name || 'a client'}.`, `/appointments/${toolCallResult.appointmentId}`);
                                 } else if (toolName === 'updateAppointmentStatus') {
                                     const { newStatus } = msg.toolCallResult.toolArgs as { newStatus: string };
-                                    addNotification(NotificationType.AppointmentChange, `AI updated an appointment to "${newStatus}" for ${client?.name || 'a client'}.`);
+                                    addNotification(NotificationType.AppointmentChange, `AI updated an appointment to "${newStatus}" for ${client?.name || 'a client'}.`, `/appointments/${toolCallResult.appointmentId}`);
                                 }
                             }
                         }
@@ -143,53 +146,54 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, [conversations]);
 
 
-    const addNotification = (type: NotificationType, message: string) => {
-        const newNotification: Notification = {
-            id: Date.now().toString(),
-            type,
-            message,
-            timestamp: new Date().toISOString(),
-            read: false,
-        };
-        setNotifications(prev => [newNotification, ...prev]);
+    const addNotification = async (type: NotificationType, message: string, link?: string) => {
+        try {
+            const newNotification = await apiCall('/notifications', { 
+                method: 'POST',
+                body: JSON.stringify({ recipientId: 'admin', type, message, link }), // recipientId is hardcoded for now
+            });
+            setNotifications(prev => [newNotification, ...prev]);
+        } catch (error) {
+            console.error("Failed to add notification to backend:", error);
+        }
     };
 
     const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
         const newClient = await apiCall('/clients', { method: 'POST', body: JSON.stringify(clientData) });
         setClients(prev => [newClient, ...prev]);
-        addNotification(NotificationType.NewClient, `New client added: ${newClient.name}`);
+        addNotification(NotificationType.NewClient, `New client added: ${newClient.name}`, `/clients/${newClient.id}`);
     };
 
     const updateClient = async (clientData: Client) => {
         const updatedClient = await apiCall(`/clients/${clientData.id}`, { method: 'PUT', body: JSON.stringify(clientData) });
         setClients(prev => prev.map(client => client.id === updatedClient.id ? updatedClient : client));
-        addNotification(NotificationType.ClientChange, `Client details for ${updatedClient.name} were updated.`);
+        addNotification(NotificationType.ClientChange, `Client details for ${updatedClient.name} were updated.`, `/clients/${updatedClient.id}`);
     };
 
     const addAppointment = async (appointmentData: AppointmentData) => {
         const newAppointment = await apiCall('/appointments', { method: 'POST', body: JSON.stringify(appointmentData) });
         setAppointments(prev => [newAppointment, ...prev].sort((a,b) => new Date(b.start).getTime() - new Date(a.start).getTime()));
         const client = clients.find(c => c.id === appointmentData.clientId);
-        addNotification(NotificationType.NewAppointment, `New appointment "${newAppointment.title}" booked for ${client?.name || 'a client'}.`);
+        addNotification(NotificationType.NewAppointment, `New appointment "${newAppointment.title}" booked for ${client?.name || 'a client'}.`, `/appointments/${newAppointment.id}`);
     };
 
     const updateAppointment = async (appointmentData: Appointment) => {
         const updatedAppointment = await apiCall(`/appointments/${appointmentData.id}`, { method: 'PUT', body: JSON.stringify(appointmentData) });
         setAppointments(prev => prev.map(appt => appt.id === updatedAppointment.id ? updatedAppointment : appt));
         const client = clients.find(c => c.id === updatedAppointment.clientId);
-        addNotification(NotificationType.AppointmentChange, `Appointment "${updatedAppointment.title}" for ${client?.name || 'a client'} was updated.`);
+        addNotification(NotificationType.AppointmentChange, `Appointment "${updatedAppointment.title}" for ${client?.name || 'a client'} was updated.`, `/appointments/${updatedAppointment.id}`);
     };
 
     const addIdentifier = async (identifierData: IdentifierData) => {
         const newIdentifier = await apiCall('/identifiers', { method: 'POST', body: JSON.stringify(identifierData) });
         setIdentifiers(prev => [newIdentifier, ...prev]);
-        addNotification(NotificationType.NewIdentifier, `New identifier created: ${newIdentifier.name}.`);
+        addNotification(NotificationType.NewIdentifier, `New identifier created: ${newIdentifier.name}.`, `/identifiers/${newIdentifier.id}`);
     };
 
     const updateIdentifier = async (identifierData: Identifier) => {
         const updatedIdentifier = await apiCall(`/identifiers/${identifierData.id}`, { method: 'PUT', body: JSON.stringify(identifierData) });
         setIdentifiers(prev => prev.map(id => id.id === updatedIdentifier.id ? updatedIdentifier : id));
-        addNotification(NotificationType.IdentifierChange, `Identifier "${updatedIdentifier.name}" was updated.`);
+        addNotification(NotificationType.IdentifierChange, `Identifier "${updatedIdentifier.name}" was updated.`, `/identifiers/${updatedIdentifier.id}`);
     };
 
     const deleteIdentifier = async (identifierId: string) => {
@@ -205,13 +209,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const fullChannelData = { ...channelData, status: channelData.enabled ? 'Active' : 'Inactive' };
         const newChannel = await apiCall('/channels', { method: 'POST', body: JSON.stringify(fullChannelData) });
         setChannels(prev => [newChannel, ...prev]);
-        addNotification(NotificationType.NewChannel, `New channel created: ${newChannel.name}.`);
+        addNotification(NotificationType.NewChannel, `New channel created: ${newChannel.name}.`, `/channels/${newChannel.id}`);
     };
 
     const updateChannel = async (channelData: Channel) => {
         const updatedChannel = await apiCall(`/channels/${channelData.id}`, { method: 'PUT', body: JSON.stringify(channelData) });
         setChannels(prev => prev.map(ch => ch.id === updatedChannel.id ? updatedChannel : ch));
-        addNotification(NotificationType.ChannelChange, `Channel "${updatedChannel.name}" was updated.`);
+        addNotification(NotificationType.ChannelChange, `Channel "${updatedChannel.name}" was updated.`, `/channels/${updatedChannel.id}`);
     };
 
     const deleteChannel = async (channelId: string) => {
@@ -233,7 +237,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
         const newFile = await res.json();
         setKnowledgeFiles(prev => [newFile, ...prev]);
-        addNotification(NotificationType.FileUploaded, `File uploaded: ${newFile.name}`);
+        addNotification(NotificationType.FileUploaded, `File uploaded: ${newFile.name}`, `/knowledge-files/${newFile.id}`);
     };
 
     const deleteKnowledgeFile = async (fileId: string) => {
@@ -280,6 +284,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     const value: AppContextType = {
+        apiCall,
         clients, setClients,
         appointments, setAppointments,
         conversations, setConversations,
