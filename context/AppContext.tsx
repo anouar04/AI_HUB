@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
-import type { Client, Appointment, Conversation, Notification, AIConfig, Message, AppointmentData, Channel, Identifier, IdentifierData, KnowledgeFile, ChannelData } from '../types';
+import type { Client, Appointment, Conversation, Notification, AIConfig, Message, AppointmentData, Channel, KnowledgeFile, ChannelData } from '../types';
 import { NotificationType } from '../types';
 
 const API_BASE_URL = 'http://localhost:5001/api';
@@ -39,8 +39,7 @@ interface AppContextType {
     setAiConfig: React.Dispatch<React.SetStateAction<AIConfig | null>>;
     channels: Channel[];
     setChannels: React.Dispatch<React.SetStateAction<Channel[]>>;
-    identifiers: Identifier[];
-    setIdentifiers: React.Dispatch<React.SetStateAction<Identifier[]>>;
+
     knowledgeFiles: KnowledgeFile[];
     setKnowledgeFiles: React.Dispatch<React.SetStateAction<KnowledgeFile[]>>;
     addNotification: (type: NotificationType, message: string, link?: string) => void;
@@ -49,9 +48,7 @@ interface AppContextType {
     updateClient: (clientData: Client) => Promise<void>;
     addAppointment: (appointmentData: AppointmentData) => Promise<void>;
     updateAppointment: (appointmentData: Appointment) => Promise<void>;
-    addIdentifier: (identifierData: IdentifierData) => Promise<void>;
-    updateIdentifier: (identifierData: Identifier) => Promise<void>;
-    deleteIdentifier: (identifierId: string) => Promise<void>;
+
     addChannel: (channelData: ChannelData) => Promise<void>;
     updateChannel: (channelData: Channel) => Promise<void>;
     deleteChannel: (channelId: string) => Promise<void>;
@@ -69,7 +66,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [aiConfig, setAiConfig] = useState<AIConfig | null>(null);
     const [channels, setChannels] = useState<Channel[]>([]);
-    const [identifiers, setIdentifiers] = useState<Identifier[]>([]);
+
     const [knowledgeFiles, setKnowledgeFiles] = useState<KnowledgeFile[]>([]);
     const prevConversationsRef = useRef<Conversation[]>();
 
@@ -85,12 +82,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
         const fetchDynamicData = async () => {
             try {
-                const [clientsData, appointmentsData, conversationsData, channelsData, identifiersData, knowledgeFilesData, notificationsData] = await Promise.all([
+                const [clientsData, appointmentsData, conversationsData, channelsData, knowledgeFilesData, notificationsData] = await Promise.all([
                     apiCall('/clients'),
                     apiCall('/appointments'),
                     apiCall('/conversations'),
                     apiCall('/channels'),
-                    apiCall('/identifiers'),
                     apiCall('/knowledge-files'),
                     apiCall('/notifications?recipientId=admin'), // Fetch notifications for admin
                 ]);
@@ -98,7 +94,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 setAppointments(appointmentsData || []);
                 setConversations(conversationsData || []);
                 setChannels(channelsData || []);
-                setIdentifiers(identifiersData || []);
+
                 setKnowledgeFiles(knowledgeFilesData || []);
                 setNotifications(notificationsData || []);
             } catch (error) {
@@ -184,26 +180,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addNotification(NotificationType.AppointmentChange, `Appointment "${updatedAppointment.title}" for ${client?.name || 'a client'} was updated.`, `/appointments/${updatedAppointment.id}`);
     };
 
-    const addIdentifier = async (identifierData: IdentifierData) => {
-        const newIdentifier = await apiCall('/identifiers', { method: 'POST', body: JSON.stringify(identifierData) });
-        setIdentifiers(prev => [newIdentifier, ...prev]);
-        addNotification(NotificationType.NewIdentifier, `New identifier created: ${newIdentifier.name}.`, `/identifiers/${newIdentifier.id}`);
-    };
 
-    const updateIdentifier = async (identifierData: Identifier) => {
-        const updatedIdentifier = await apiCall(`/identifiers/${identifierData.id}`, { method: 'PUT', body: JSON.stringify(identifierData) });
-        setIdentifiers(prev => prev.map(id => id.id === updatedIdentifier.id ? updatedIdentifier : id));
-        addNotification(NotificationType.IdentifierChange, `Identifier "${updatedIdentifier.name}" was updated.`, `/identifiers/${updatedIdentifier.id}`);
-    };
-
-    const deleteIdentifier = async (identifierId: string) => {
-        const identifierToDelete = identifiers.find(id => id.id === identifierId);
-        await apiCall(`/identifiers/${identifierId}`, { method: 'DELETE' });
-        setIdentifiers(prev => prev.filter(id => id.id !== identifierId));
-        if (identifierToDelete) {
-            addNotification(NotificationType.IdentifierDeleted, `Identifier "${identifierToDelete.name}" was deleted.`);
-        }
-    };
 
     const addChannel = async (channelData: ChannelData) => {
         const fullChannelData = { ...channelData, status: channelData.enabled ? 'Active' : 'Inactive' };
@@ -266,8 +243,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const lastAIMessage = updatedConversation.messages.slice().reverse().find((m: Message) => m.isAI);
         const toolName = lastAIMessage?.toolCallResult?.toolName;
         if (toolName === 'bookAppointment' || toolName === 'updateAppointmentStatus') {
-            const appointmentsData = await apiCall('/appointments');
-            setAppointments(appointmentsData);
+            // Instead of re-fetching all appointments, update the specific one if possible
+            if (toolName === 'updateAppointmentStatus' && lastAIMessage?.toolCallResult?.toolArgs?.appointmentId) {
+                const updatedAppointment = await apiCall(`/appointments/${lastAIMessage.toolCallResult.toolArgs.appointmentId}`);
+                setAppointments(prev => prev.map(appt => appt.id === updatedAppointment.id ? updatedAppointment : appt));
+            } else {
+                // For bookAppointment or if specific update fails, re-fetch all
+                const appointmentsData = await apiCall('/appointments');
+                setAppointments(appointmentsData);
+            }
 
             const toolArgs = lastAIMessage?.toolCallResult?.toolArgs;
             if (toolArgs) {
@@ -291,7 +275,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         notifications, setNotifications,
         aiConfig, setAiConfig,
         channels, setChannels,
-        identifiers, setIdentifiers,
+
         knowledgeFiles, setKnowledgeFiles,
         addNotification,
         handleIncomingMessage,
@@ -299,9 +283,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateClient,
         addAppointment,
         updateAppointment,
-        addIdentifier,
-        updateIdentifier,
-        deleteIdentifier,
+
         addChannel,
         updateChannel,
         deleteChannel,

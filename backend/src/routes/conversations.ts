@@ -63,10 +63,28 @@ router.post('/:id/reply', async (req: Request, res: Response) => {
 
 // PUT to update conversation (e.g., mark as read)
 router.put('/:id', async (req: Request, res: Response) => {
+    console.log('Request Body:', req.body);
+    console.log('Request Headers:', req.headers);
     try {
         const updatedConversation = await Conversation.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedConversation) return res.status(404).json({ message: 'Conversation not found' });
         res.json(updatedConversation);
+    } catch (err: any) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+// PUT route to clear all messages for a specific conversation
+router.put('/:id/clear-messages', async (req: Request, res: Response) => {
+    console.log(`Received request to clear conversation: ${req.params.id}`);
+    try {
+        const conversation = await Conversation.findByIdAndUpdate(
+            req.params.id,
+            { $set: { messages: [] } }, // Set messages array to empty
+            { new: true }
+        );
+        if (!conversation) return res.status(404).json({ message: 'Conversation not found' });
+        res.json(conversation);
     } catch (err: any) {
         res.status(400).json({ message: err.message });
     }

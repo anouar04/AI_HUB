@@ -35,7 +35,7 @@ const ChannelCard: React.FC<{ channel: Channel; onViewHistory: (channel: Channel
 );
 
 const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation[]; onBack: () => void; }> = ({ channel, conversations, onBack }) => {
-    const { clients, setConversations, conversations: allConversations } = useAppContext();
+    const { clients, setConversations, conversations: allConversations, apiCall } = useAppContext();
     const [selectedConversationId, setSelectedConversationId] = useState<string | null>(conversations.length > 0 ? conversations[0].id : null);
     const [replyText, setReplyText] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -60,10 +60,53 @@ const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation
 
 
 
-    const handleSelectConversation = (id: string) => {
+    const sortedConversations = [...conversations].sort((a, b) => {
+        const lastMessageA = a.messages[a.messages.length - 1];
+        const lastMessageB = b.messages[b.messages.length - 1];
+
+        if (!lastMessageA) return 1;
+        if (!lastMessageB) return -1;
+
+        return new Date(lastMessageB.timestamp).getTime() - new Date(lastMessageA.timestamp).getTime();
+    });
+
+    const handleSelectConversation = async (id: string) => {
+        const conversation = conversations.find(c => c.id === id);
+        if (conversation && conversation.unread) {
+            try {
+                // Optimistically update the UI
+                setConversations(convos => convos.map(c => c.id === id ? { ...c, unread: false } : c));
+                // Make the API call to mark as read
+                await apiCall(`/conversations/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ unread: false }),
+                });
+            } catch (error) {
+                console.error("Failed to mark conversation as read:", error);
+                // Revert the optimistic update if the API call fails
+                setConversations(convos => convos.map(c => c.id === id ? { ...c, unread: true } : c));
+            }
+        }
         setSelectedConversationId(id);
-        setConversations(convos => convos.map(c => c.id === id ? {...c, unread: false} : c));
         setIsAtBottom(true); // Reset to true when a new conversation is selected
+    };
+
+
+    const handleClearConversation = async () => {
+        if (!selectedConversationId || !selectedConversation) return;
+
+        if (window.confirm('Are you sure you want to clear this conversation? This action cannot be undone.')) {
+            try {
+                await apiCall(`/conversations/${selectedConversationId}/clear-messages`, { method: 'PUT' });
+                setConversations(prev => prev.map(convo => 
+                    convo.id === selectedConversationId ? { ...convo, messages: [] } : convo
+                ));
+                alert('Conversation cleared successfully!');
+            } catch (error) {
+                console.error("Failed to clear conversation:", error);
+                alert('Failed to clear conversation. Please try again.');
+            }
+        }
     };
 
     const handleSendReply = async () => {
@@ -118,7 +161,7 @@ const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation
             </div>
             <div className="flex-1 flex bg-white rounded-lg shadow-sm overflow-hidden">
                 <div className="w-1/3 border-r border-slate-200 overflow-y-auto">
-                    {conversations.map(convo => {
+                    {sortedConversations.map(convo => {
                         const client = clients.find(c => c.id === convo.clientId);
                         const lastMessage = convo.messages[convo.messages.length - 1];
                         return (
@@ -137,7 +180,15 @@ const ChannelInboxView: React.FC<{ channel: Channel; conversations: Conversation
                 <div className="w-2/3 flex flex-col">
                     {selectedConversation ? (
                         <>
-                        <div className="p-4 border-b border-slate-200"><h2 className="font-bold text-lg">{clients.find(c=>c.id === selectedConversation.clientId)?.name}</h2></div>
+                        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+                            <h2 className="font-bold text-lg">{clients.find(c=>c.id === selectedConversation.clientId)?.name}</h2>
+                            <button 
+                                onClick={handleClearConversation}
+                                className="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition shadow-sm"
+                            >
+                                Clear Conversation
+                            </button>
+                        </div>
                         <div ref={messagesContainerRef} onScroll={handleScroll} className="flex-1 p-6 overflow-y-auto bg-slate-50">
                             <div className="space-y-4">
                                 {selectedConversation.messages.map(msg => (

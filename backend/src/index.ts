@@ -8,9 +8,10 @@ import appointmentRoutes from './routes/appointments';
 import conversationRoutes from './routes/conversations';
 import aiConfigRoutes from './routes/aiConfig';
 import channelRoutes from './routes/channels';
-import identifierRoutes from './routes/identifiers';
+
 import knowledgeFileRoutes from './routes/knowledgeFiles';
 import twilioWebhookRoutes from './routes/twilioWebhook';
+import broadcastMessageRoutes from './routes/broadcastMessage';
 import notificationsRoutes from './routes/notifications';
 
 dotenv.config();
@@ -38,8 +39,9 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/ai-config', aiConfigRoutes);
 app.use('/api/channels', channelRoutes);
-app.use('/api/identifiers', identifierRoutes);
+
 app.use('/api/knowledge-files', knowledgeFileRoutes);
+app.use('/api/broadcast-message', broadcastMessageRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 // Webhook Routes

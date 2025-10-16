@@ -1,5 +1,21 @@
-afen abro hania
-
-5:28 PM
-
-Ahlan khouya! Choukran 3la had l'image. Hadchi li kayn fih houwa nafss lma3loumat li 3endi 3la les services dialna. Hadou houma kolchi les services li kanqeddmo f Serenity Oasis Spa, m3a lwaqt dial kol service o tamn dialou: **1. Massages** * **Swedish Massage:** Massage classique dial ljesm kamel bach nkhfffo l3ya dial l3dlat. * Lwaqt: 60 dqayeq * Tamn: $65 * **Deep Tissue Massage:** Kayrkez 3la l3dlat lli f l3meq bach yheyyed l'alam mzmen. * Lwaqt: 75 dqayeq * Tamn: $90 * **Hot Stone Massage:** Kanst3mlo fih hjar skhounin bach ykoun wahed l'istirkha2 3amiq. * Lwaqt: 90 dqayeq * Tamn: $110 **2. Facial Treatments (Soins dial lwjeh)** * **Signature Facial:** Soin dial lwjeh mkhssous lkol nou3 dial lbeshra. * Lwaqt: 60 dqayeq * Tamn: $80 * **Anti-Aging Facial:** Traitement mkhssous bach ynaqqes men tkamach w khtout raqiqin. * Lwaqt: 75 dqayeq * Tamn: $100 **3. Body Treatments (Traitements dial ljesm)** * **Invigorating Body Scrub:** Exfoliation dial ljesm kamel b wahed scrub tabi3i. * Lwaqt: 45 dqayeq * Tamn: $55 * **Detoxifying Body Wrap:** Ljesm kaytghatta b wahed lkhalit skhoun bach ykhrej mennou smoum. * Lwaqt: 60 dqayeq * Tamn: $75 **4. Hand & Foot Care (L3inaya dial liyeddine o rjlin)** * **Classic Manicure:** Fih l3inaya dial l'adafer o sbigha. * Lwaqt: 30 dqayeq * Tamn: $30 * **Deluxe Pedicure:** Hamam rjlin fakhkhir, exfoliation, o massage. * Lwaqt: 60 dqayeq * Tamn: $45 L'hadaf dialna houwa kol client ykhrej men 3endna mkemmel b l'istirkha2 w Tajdid. Kayn chi haja men had les services bghiti t3ref 3liha kter wla bghiti tqeyyed chi rendez-vous?
+[start:backend] --- Twilio Webhook Received ---
+[start:backend] From: whatsapp:+212639528594, Name: Anouar, Message: Hi
+[start:backend] Message processed for conversation: 68c36abc35f2eb58c304aaf5
+[start:backend] Request Body: { unread: false }
+[start:backend] Request Headers: {
+[start:backend]   host: 'localhost:5001',
+[start:backend]   connection: 'keep-alive',
+[start:backend]   'content-length': '16',
+[start:backend]   'sec-ch-ua-platform': '"Windows"',
+[start:backend]   'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0',
+[start:backend]   'sec-ch-ua': '"Microsoft Edge";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+[start:backend]   'content-type': 'application/json',
+[start:backend]   'sec-ch-ua-mobile': '?0',
+[start:backend]   accept: '*/*',
+[start:backend]   origin: 'http://localhost:5173',
+[start:backend]   'sec-fetch-site': 'same-site',
+[start:backend]   'sec-fetch-mode': 'cors',
+[start:backend]   'sec-fetch-dest': 'empty',
+[start:backend]   referer: 'http://localhost:5173/',
+[start:backend]   'accept-encoding': 'gzip, deflate, br, zstd',
+[start:backend]   'accept-language': 'en-US,en;q=0.9,fr-FR;q=0.8,fr;q=0.7'

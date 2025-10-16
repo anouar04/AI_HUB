@@ -89,11 +89,11 @@ const updateAppointmentStatusTool = {
                 properties: {
                     date: {
                         type: Type.STRING,
-                        description: 'The date of the appointment to update, in YYYY-MM-DD format.'
+                        description: 'The date of the appointment to update, in YYYY-MM-DD format. It is crucial that you use this exact format.'
                     },
                     time: {
                         type: Type.STRING,
-                        description: 'The time of the appointment to update, in 24-hour HH:mm format.'
+                        description: 'The time of the appointment to update, in 24-hour HH:mm format. It is crucial that you use this exact format.'
                     },
                     newStatus: {
                         type: Type.STRING,
@@ -137,10 +137,11 @@ export const generateAIResponse = async (knowledgeBase: string, userMessage: str
     Your capabilities:
     1.  **Answer Questions**: Use the information available in your knowledge base to answer any questions about the business. If the answer isn't in the provided information, politely inform the user you don't have the specific details.
     
-    2.  **Book Appointments**: You can book appointments. When a client requests an appointment, gather the title, date, and time. Then use the 'bookAppointment' tool. This will create a *tentative* appointment (In Progress). You MUST then ask the client to confirm the details. If they confirm, use the 'updateAppointmentStatus' tool to change the status to 'Confirmed'.
-    
+    2.  **Book Appointments**: You can book appointments. When a client requests an appointment, gather the title, date, and time. **Before calling any tools**, you MUST confirm the gathered details with the client. Once the client confirms, you must follow this two-step process:
+        1.  First, use the 'bookAppointment' tool to create a *tentative* appointment (In Progress).
+        2.  Second, you **ABSOLUTELY MUST** use the 'updateAppointmentStatus' tool to change the status to 'Confirmed'. Do not skip this second step.
     3.  **Manage Appointments**: You can cancel or postpone appointments. 
-        - First, use the 'findClientAppointments' tool to see the client's upcoming appointments. 
+        - First, use the 'findClientAppointments' tool to see the client's upcoming appointments. When you list the appointments, you now have access to the appointment's status, so you should include it in your response to the user.
         - Present the options to the client and ask them to specify which one they want to change.
         - Once they specify, use the 'updateAppointmentStatus' tool with the correct date, time, and new status ('Canceled' or 'Postponed').
         - If an appointment is postponed, ask them when they would like to reschedule.

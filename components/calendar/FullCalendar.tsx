@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { Appointment, AppointmentStatus } from '../../types';
@@ -23,9 +22,126 @@ interface FullCalendarProps {
     onEditAppointment: (appointment: Appointment) => void;
 }
 
-const FullCalendar: React.FC<FullCalendarProps> = ({ onAddAppointment, onEditAppointment }) => {
+const WeekView: React.FC<{
+    currentDate: Date;
+    appointmentsByDate: Record<string, Appointment[]>;
+    onEditAppointment: (appointment: Appointment) => void;
+}> = ({ currentDate, appointmentsByDate, onEditAppointment }) => {
+    const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const daysInWeek = eachDayOfInterval({
+        start: startOfWeek(currentDate),
+        end: endOfWeek(currentDate)
+    });
+
+    const getStatusColor = (status: AppointmentStatus) => {
+        switch (status) {
+            case AppointmentStatus.Confirmed: return 'bg-blue-500';
+            case AppointmentStatus.InProgress: return 'bg-purple-500';
+            case AppointmentStatus.Treated: return 'bg-green-500';
+            case AppointmentStatus.Postponed: return 'bg-orange-500';
+            case AppointmentStatus.Canceled: return 'bg-red-500';
+            default: return 'bg-slate-500';
+        }
+    }
+
+    const { clients } = useAppContext();
+
+
+    return (
+        <div className="grid grid-cols-7 flex-1">
+            {/* Day Headers */}
+            {weekDays.map(day => (
+                <div key={day} className="text-center font-semibold text-sm text-slate-500 py-3 border-b border-slate-200">
+                    {day}
+                </div>
+            ))}
+
+            {/* Day Cells */}
+            {daysInWeek.map(day => {
+                const isCurrentDay = isToday(day);
+                const dayKey = format(day, 'yyyy-MM-dd');
+                const dayAppointments = appointmentsByDate[dayKey] || [];
+
+                return (
+                    <div key={day.toString()} className={`border-r border-b border-slate-200 p-2 flex flex-col`}>
+                        <span className={`self-start text-sm font-medium mb-2 text-slate-700 ${isCurrentDay ? 'bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center' : 'p-1'}`}>
+                            {format(day, 'd')}
+                        </span>
+                        <div className="flex-1 space-y-1 overflow-y-auto max-h-72">
+                            {dayAppointments.map(appt => {
+                                const client = clients.find(c => c.id === appt.clientId);
+                                return (
+                                    <button
+                                        key={appt.id}
+                                        onClick={() => onEditAppointment(appt)}
+                                        className={`w-full text-left p-1.5 rounded-md text-white text-xs ${getStatusColor(appt.status)}`}
+                                    >
+                                        <p className="font-semibold truncate">{appt.title}</p>
+                                        <p className="opacity-80">{client?.name}</p>
+                                        <p className="opacity-80 font-bold">{format(parseISO(appt.start), 'HH:mm')}</p>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+const DayView: React.FC<{
+    currentDate: Date;
+    appointmentsByDate: Record<string, Appointment[]>;
+    onEditAppointment: (appointment: Appointment) => void;
+}> = ({ currentDate, appointmentsByDate, onEditAppointment }) => {
+    const dayKey = format(currentDate, 'yyyy-MM-dd');
+    const dayAppointments = appointmentsByDate[dayKey] || [];
+
+    const getStatusColor = (status: AppointmentStatus) => {
+        switch (status) {
+            case AppointmentStatus.Confirmed: return 'bg-blue-500';
+            case AppointmentStatus.InProgress: return 'bg-purple-500';
+            case AppointmentStatus.Treated: return 'bg-green-500';
+            case AppointmentStatus.Postponed: return 'bg-orange-500';
+            case AppointmentStatus.Canceled: return 'bg-red-500';
+            default: return 'bg-slate-500';
+        }
+    }
+
+    const { clients } = useAppContext();
+
+    return (
+        <div className="flex-1 p-4 flex flex-col">
+            <h3 className="text-lg font-semibold mb-4">{format(currentDate, 'EEEE, MMMM d, yyyy')}</h3>
+            <div className="flex-1 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            
+                {dayAppointments.map(appt => {
+                    const client = clients.find(c => c.id === appt.clientId);
+                    return (
+                        <button
+                            key={appt.id}
+                            onClick={() => onEditAppointment(appt)}
+                            className={`flex-shrink-0 text-left p-1 rounded-md text-white h-18 overflow-hidden ${getStatusColor(appt.status)}`}
+                        >
+                            <p className="font-semibold">{appt.title}</p>
+                            <p className="text-sm">{client?.name}</p>
+                            <p className="text-sm font-bold">{format(parseISO(appt.start), 'HH:mm')} - {format(parseISO(appt.end), 'HH:mm')}</p>
+                        </button>
+                    )
+                })}
+                {dayAppointments.length === 0 && (
+                    <p className="text-slate-500">No appointments for this day.</p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default function FullCalendar({ onAddAppointment, onEditAppointment }: FullCalendarProps) {
     const { appointments, clients } = useAppContext();
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [view, setView] = useState<'month' | 'week' | 'day'>('month');
 
     const firstDayOfMonth = startOfMonth(currentDate);
     const lastDayOfMonth = endOfMonth(currentDate);
@@ -89,55 +205,70 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ onAddAppointment, onEditApp
                     {format(currentDate, 'MMMM yyyy')}
                 </h2>
                 <div className="flex items-center bg-slate-100 rounded-lg p-1 text-sm font-semibold">
-                    <button className="px-3 py-1 bg-white rounded-md shadow-sm text-slate-800">month</button>
-                    <button className="px-3 py-1 text-slate-500">week</button>
-                    <button className="px-3 py-1 text-slate-500">day</button>
+                    <button onClick={() => setView('month')} className={`px-3 py-1 rounded-md shadow-sm ${view === 'month' ? 'bg-white text-slate-800' : 'text-slate-500'}`}>month</button>
+                    <button onClick={() => setView('week')} className={`px-3 py-1 rounded-md shadow-sm ${view === 'week' ? 'bg-white text-slate-800' : 'text-slate-500'}`}>week</button>
+                    <button onClick={() => setView('day')} className={`px-3 py-1 rounded-md shadow-sm ${view === 'day' ? 'bg-white text-slate-800' : 'text-slate-500'}`}>day</button>
                 </div>
             </div>
 
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7 flex-1">
-                {/* Day Headers */}
-                {weekDays.map(day => (
-                    <div key={day} className="text-center font-semibold text-sm text-slate-500 py-3 border-b border-slate-200">
-                        {day}
-                    </div>
-                ))}
+                        {/* Calendar Grid */}
 
-                {/* Day Cells */}
-                {daysInMonth.map(day => {
-                    const isCurrentMonth = isSameMonth(day, currentDate);
-                    const isCurrentDay = isToday(day);
-                    const dayKey = format(day, 'yyyy-MM-dd');
-                    const dayAppointments = appointmentsByDate[dayKey] || [];
-
-                    return (
-                        <div key={day.toString()} className={`border-r border-b border-slate-200 p-2 flex flex-col ${isCurrentMonth ? '' : 'bg-slate-50'}`}>
-                            <span className={`self-start text-sm font-medium mb-2 ${isCurrentMonth ? 'text-slate-700' : 'text-slate-400'} ${isCurrentDay ? 'bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center' : 'p-1'}`}>
-                                {format(day, 'd')}
-                            </span>
-                            <div className="flex-1 space-y-1 overflow-y-auto">
-                                {dayAppointments.map(appt => {
-                                    const client = clients.find(c => c.id === appt.clientId);
-                                    return (
-                                        <button 
-                                            key={appt.id}
-                                            onClick={() => onEditAppointment(appt)}
-                                            className={`w-full text-left p-1.5 rounded-md text-white text-xs ${getStatusColor(appt.status)}`}
-                                        >
-                                            <p className="font-semibold truncate">{appt.title}</p>
-                                            <p className="opacity-80">{client?.name}</p>
-                                            <p className="opacity-80 font-bold">{format(parseISO(appt.start), 'HH:mm')}</p>
-                                        </button>
-                                    )
-                                })}
-                            </div>
+            {view === 'month' && (
+                <div className="grid grid-cols-7 flex-1">
+                    {/* Day Headers */}
+                    {weekDays.map(day => (
+                        <div key={day} className="text-center font-semibold text-sm text-slate-500 py-3 border-b border-slate-200">
+                            {day}
                         </div>
-                    );
-                })}
-            </div>
+                    ))}
+
+                    {/* Day Cells */}
+                    {daysInMonth.map(day => {
+                        const isCurrentMonth = isSameMonth(day, currentDate);
+                        const isCurrentDay = isToday(day);
+                        const dayKey = format(day, 'yyyy-MM-dd');
+                        const dayAppointments = appointmentsByDate[dayKey] || [];
+
+                        return (
+                            <div key={day.toString()} className={`border-r border-b border-slate-200 p-2 flex flex-col ${isCurrentMonth ? '' : 'bg-slate-50'}`}>
+                                <span className={`self-start text-sm font-medium mb-2 text-slate-700 ${isCurrentDay ? 'bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center' : 'p-1'}`}>
+                                    {format(day, 'd')}
+                                </span>
+                                <div className="flex-1 space-y-1 overflow-y-auto max-h-72">
+                                    {dayAppointments.map(appt => {
+                                        const client = clients.find(c => c.id === appt.clientId);
+                                        return (
+                                            <button
+                                                key={appt.id}
+                                                onClick={() => onEditAppointment(appt)}
+                                                className={`w-full text-left p-1.5 rounded-md text-white text-xs ${getStatusColor(appt.status)}`}
+                                            >
+                                                <p className="font-semibold truncate">{appt.title}</p>
+                                                <p className="opacity-80">{client?.name}</p>
+                                                <p className="opacity-80 font-bold">{format(parseISO(appt.start), 'HH:mm')}</p>
+                                            </button>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+            {view === 'week' && (
+                <WeekView
+                    currentDate={currentDate}
+                    appointmentsByDate={appointmentsByDate}
+                    onEditAppointment={onEditAppointment}
+                />
+            )}
+            {view === 'day' && (
+                <DayView
+                    currentDate={currentDate}
+                    appointmentsByDate={appointmentsByDate}
+                    onEditAppointment={onEditAppointment}
+                />
+            )}
         </div>
     );
-};
-
-export default FullCalendar;
+}

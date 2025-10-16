@@ -9,7 +9,8 @@ import CommunicationView from './components/communications/CommunicationView';
 import AIAgentView from './components/ai/AIAgentView';
 import NotificationsView from './components/notifications/NotificationsView';
 import AcquisitionChannelsView from './components/channels/AcquisitionChannelsView';
-import IdentifiersView from './components/identifiers/IdentifiersView';
+
+import BroadcastMessageView from './components/broadcast-message/BroadcastMessageView';
 import TeachAgentView from './components/teach-agent/TeachAgentView';
 import type { View } from './types';
 
@@ -32,8 +33,9 @@ const App: React.FC = () => {
         return <NotificationsView />;
       case 'acquisition-channels':
         return <AcquisitionChannelsView />;
-      case 'identifiers':
-        return <IdentifiersView />;
+
+      case 'broadcast-message':
+        return <BroadcastMessageView />;
       case 'teach-agent':
         return <TeachAgentView />;
       default:

@@ -62,7 +62,7 @@ export const processAndRespond = async (conversation: IConversation & Document, 
             if (name === 'bookAppointment') {
                 const { title, date, time, durationMinutes = 60 } = args as { title: string; date: string; time: string; durationMinutes?: number };
                 try {
-                    const startDateTime = parseISO(`${date}T${time}`);
+                    const startDateTime = new Date(`${date}T${time}`);
                     const endDateTime = addMinutes(startDateTime, durationMinutes);
                     const appointment = new Appointment({
                         clientId: conversation.clientId,
@@ -95,7 +95,7 @@ export const processAndRespond = async (conversation: IConversation & Document, 
                     clientId: conversation.clientId,
                     start: { $gte: new Date() }
                 }).sort({ start: 'asc' });
-                toolResult = { appointments: appointments.map(a => ({ title: a.title, start: format(a.start, 'Pp') })) };
+                toolResult = { appointments: appointments.map(a => ({ title: a.title, start: format(a.start, 'Pp'), status: a.status })) };
             } else if (name === 'updateAppointmentStatus') {
                 console.log("Attempting to execute updateAppointmentStatus tool.");
                 const { date, time, newStatus } = args as { date: string; time: string; newStatus: AppointmentStatus };
@@ -103,15 +103,17 @@ export const processAndRespond = async (conversation: IConversation & Document, 
                     toolResult = { success: false, error: "Invalid appointment status provided by user." };
                 } else {
                     try {
-                        const startDateTime = parseISO(`${date}T${time}`);
-                        console.log("Attempting to find appointment with clientId:", conversation.clientId, "and startDateTime:", startDateTime);
-                        const appointment = await Appointment.findOne({ clientId: conversation.clientId, start: startDateTime });
-                        console.log("Appointment findOne result:", appointment);
+                        const startDateTime = new Date(`${date}T${time}`);
+                        console.log("Attempting to find and update appointment with clientId:", conversation.clientId, "and startDateTime:", startDateTime);
+                        const appointment = await Appointment.findOneAndUpdate(
+                            { clientId: conversation.clientId, start: startDateTime },
+                            { status: newStatus },
+                            { new: true } // Return the updated document
+                        );
+                        console.log("Appointment findOneAndUpdate result:", appointment);
                         if (appointment) {
-                            appointment.status = newStatus;
-                            await appointment.save();
                             await createNotification('admin', `Appointment \"${appointment.title}\" status updated to ${newStatus}.`, NotificationType.AppointmentChange, `/appointments/${appointment.id}`);
-                            toolResult = { success: true, status: newStatus, title: appointment.title };
+                            toolResult = { success: true, status: newStatus, title: appointment.title, appointmentId: appointment.id };
                         } else {
                             toolResult = { success: false, error: "Appointment not found at the specified date and time." };
                         }
